@@ -1,53 +1,73 @@
-# 어디일까? — 한·일 3D 지오 게임 (Mapbox GL JS 데모)
+# 어디일까? (Where is it?) — a 3D geo-guessing game on Mapbox GL JS
 
-3D 위성 화면만 보고 한국·일본 명소의 위치를 지도에 찍는 5라운드 게임입니다.
-정답을 공개하면 내가 찍은 지점에서 정답까지의 **실제 운전 경로와 소요 시간**을 Directions API로 보여 줍니다.
+**Play:** https://hakhyun-kim.github.io/mapbox-geo-game/
 
-## 쓰인 Mapbox 기능
+You are dropped into an unlabeled 3D satellite view of a landmark somewhere in Korea or Japan.
+Find it on the map. When the answer is revealed, the game also asks the Directions API how long it
+would actually take to **drive** from your guess to the answer — or tells you there is no road,
+because the answer is across the sea.
 
-| 기능 | 어디에 |
+> 3D 위성 화면만 보고 한국·일본 명소의 위치를 지도에 찍는 5라운드 게임입니다.
+> 정답을 공개하면 내가 찍은 지점에서 정답까지의 실제 운전 경로와 소요 시간을 보여 줍니다.
+
+## How a round works
+
+1. **Fly-in.** The camera flies from the globe to the landmark (`flyTo`) and starts a slow orbit over
+   3D terrain. Satellite imagery without labels (`satellite-v9`) is the only clue.
+2. **Guess.** Click a point on the 2D guess map. A category hint is available for half the points.
+3. **Reveal.** The answer pin, a straight-line distance, and the driving route from the guess to the
+   answer are drawn on the guess map. Score falls off exponentially with distance (5,000 max per round).
+
+Regions: Korea, Japan, or both — 21 landmarks in total.
+
+## Mapbox features used
+
+| Feature | Where it shows up |
 |---|---|
-| Globe projection + Fog/별 하늘 | 시작 화면의 지구본, 라운드 사이 비행 |
-| Satellite imagery (`satellite-v9`, 라벨 없음) | 정답 장소 3D 장면 — 지명이 안 보이게 |
-| Terrain (`mapbox-terrain-dem-v1`, 1.4배 과장) | 한라산·후지산 같은 지형이 입체로 보임 |
-| Camera API (`flyTo`, 자동 궤도 회전, minZoom 잠금) | 장소로 날아가 주변을 돌며 보여 주되, 너무 줌아웃해 해안선으로 답을 알 수 없게 |
-| Markers + GeoJSON line layers | 추측·정답 핀, 직선 거리 점선, 운전 경로 |
-| Directions API (`driving`) | 추측 지점 → 정답까지 도로 경로·거리·시간. 바다 건너면 `NoRoute`를 받아 안내 |
+| Globe projection, fog and star sky | Start screen and the flights between rounds |
+| Satellite imagery (`satellite-v9`) | The landmark scene, with no labels to give the answer away |
+| Terrain (`mapbox-terrain-dem-v1`, 1.4× exaggeration) | Mountains such as Hallasan and Fuji read as real 3D shapes |
+| Camera API (`flyTo`, bearing orbit, `minZoom` lock, `dragPan` toggle) | Shows the surroundings but stops the player zooming out to read the coastline |
+| Markers and GeoJSON line layers | Guess and answer pins, the dashed straight line, the driving route |
+| Directions API (`mapbox/driving`, GeoJSON geometry) | Route, distance and duration from guess to answer; `NoRoute` / `NoSegment` handled as "no road connection" |
 
-거리 계산(하버사인)과 점수(지수 감쇠, 300m 이내 만점, 힌트 사용 시 절반)는 `src/game.js`에 DOM 없이 분리돼 있고 `npm test`로 검증합니다.
+## Design notes
 
-## 플레이
+- **Logic is separated from the map.** Distance (haversine), scoring, round selection and formatting
+  live in `src/game.js` with no DOM or map dependency, and are covered by `npm test`. A test also
+  checks that every landmark lies inside its region's bounds.
+- **Stale responses are ignored.** A Directions response that arrives after the player has moved on
+  to the next round is dropped instead of drawing over the new round.
+- **Token safety.** The access token is inlined into the public bundle, so the build refuses anything
+  that is not a public `pk.*` token, and the in-page token form rejects `sk.*` tokens. Deployment uses
+  a Pages artifact, so the built bundle is never committed to git.
 
-https://hakhyun-kim.github.io/mapbox-geo-game/
-
-## 토큰 설정 (배포)
-
-1. [Mapbox 계정 → Tokens](https://account.mapbox.com/access-tokens/)에서 공개 토큰(`pk.`)을 만들고 **URL restrictions**에 `https://hakhyun-kim.github.io/mapbox-geo-game/`와 `http://localhost:5173/`를 넣습니다. 공개 토큰은 빌드된 JS에 그대로 들어가므로, 다른 사이트에서 못 쓰게 막는 건 이 URL 제한입니다.
-2. 이 저장소 **Settings → Secrets and variables → Actions → New repository secret**: 이름 `MAPBOX_TOKEN`, 값 `pk....`
-3. **Settings → Pages → Build and deployment → Source: GitHub Actions** (빌드 결과를 git에 커밋하지 않아서 토큰이 저장소 이력에 남지 않음)
-4. **Actions → Deploy to GitHub Pages → Run workflow** (이후엔 `main`에 push할 때마다 자동 배포)
-
-## 실행 (로컬)
+## Run locally
 
 ```bash
 npm install
-cp .env.example .env   # VITE_MAPBOX_TOKEN=pk.... 입력
+cp .env.example .env     # set VITE_MAPBOX_TOKEN=pk....
 npm run dev
+npm test                 # game logic tests
 ```
 
-토큰 없이 열면 화면에서 공개 토큰(`pk.`)을 입력받아 브라우저에만 저장합니다. 주소에 `?token=pk...`을 붙여도 됩니다.
-비밀 토큰(`sk.`)은 거부합니다.
+Without a build-time token, the page asks for a public token and keeps it in that browser only.
+Appending `?token=pk...` to the URL also works.
 
-공개 배포(GitHub Pages 등) 시에는 Mapbox 계정에서 토큰의 **URL 제한**을 배포 주소로 걸어 두세요.
+## Deploy (GitHub Pages)
 
-```bash
-npm run build   # dist/ 를 정적 호스팅에 올리면 끝 (base: './')
+1. Add a repository secret `MAPBOX_TOKEN` with a Mapbox **public** token (`pk.*`).
+   If you create a dedicated token, restrict it to your Pages URL in the Mapbox account.
+2. Settings → Pages → Source: **GitHub Actions**.
+3. Push to `main` (or run the "Deploy to GitHub Pages" workflow). Tests run before the build.
+
+## Project layout
+
+```
+src/places.js   21 landmarks (Korea 10, Japan 11) and per-region bounds / score scale
+src/game.js     pure game logic: distance, score, round picking, formatting
+src/main.js     the two maps (3D scene + guess map) and the game flow
+.github/workflows/pages.yml   test → build → deploy to Pages
 ```
 
-## 구조
-
-```
-src/places.js   명소 21곳 (한국 10 · 일본 11) + 지역별 경계·점수 스케일
-src/game.js     순수 로직: 거리, 점수, 라운드 추첨, 포맷
-src/main.js     지도 두 개(3D 장면 + 추측 지도)와 게임 흐름
-```
+Built with [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/) and Vite.
