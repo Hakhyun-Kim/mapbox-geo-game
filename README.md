@@ -24,7 +24,7 @@ https://hakhyun-kim.github.io/mapbox-geo-game/
 
 1. [Mapbox 계정 → Tokens](https://account.mapbox.com/access-tokens/)에서 공개 토큰(`pk.`)을 만들고 **URL restrictions**에 `https://hakhyun-kim.github.io/mapbox-geo-game/`와 `http://localhost:5173/`를 넣습니다. 공개 토큰은 빌드된 JS에 그대로 들어가므로, 다른 사이트에서 못 쓰게 막는 건 이 URL 제한입니다.
 2. 이 저장소 **Settings → Secrets and variables → Actions → New repository secret**: 이름 `MAPBOX_TOKEN`, 값 `pk....`
-3. **Settings → Pages → Source: Deploy from a branch → `gh-pages` / root** (첫 배포 때 자동으로 켜지기도 함)
+3. **Settings → Pages → Build and deployment → Source: GitHub Actions** (빌드 결과를 git에 커밋하지 않아서 토큰이 저장소 이력에 남지 않음)
 4. **Actions → Deploy to GitHub Pages → Run workflow** (이후엔 `main`에 push할 때마다 자동 배포)
 
 ## 실행 (로컬)
