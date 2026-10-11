@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>어디일까? — 한·일 3D 지오 게임</title>
+    <script type="module" crossorigin src="./assets/index-Mh-yKkjO.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CPijhPGt.css">
+  </head>
+  <body>
+    <div id="scene"></div>
+
+    <header id="hud" hidden>
+      <div class="hud-item"><span class="hud-label">라운드</span> <b id="hud-round">1 / 5</b></div>
+      <div class="hud-item"><span class="hud-label">점수</span> <b id="hud-score">0</b></div>
+      <button id="hint-btn" class="ghost">힌트 보기 (점수 절반)</button>
+      <div id="hint-text" hidden></div>
+    </header>
+
+    <section id="guess-panel" hidden>
+      <div id="guess-map"></div>
+      <div class="guess-actions">
+        <span id="guess-help">지도를 눌러 위치를 찍으세요</span>
+        <button id="submit-btn" disabled>여기다!</button>
+      </div>
+    </section>
+
+    <section id="result" class="card" hidden>
+      <h2 id="result-title"></h2>
+      <dl>
+        <dt>직선 거리</dt><dd id="result-distance"></dd>
+        <dt>운전 경로</dt><dd id="result-route"></dd>
+        <dt>이번 라운드</dt><dd id="result-score"></dd>
+      </dl>
+      <button id="next-btn">다음 라운드</button>
+    </section>
+
+    <section id="start" class="overlay">
+      <div class="card">
+        <h1>어디일까?</h1>
+        <p>3D 위성 화면만 보고 한국·일본 명소의 위치를 지도에 찍어 보세요.<br />
+          정답을 공개하면 내 추측 지점에서 정답까지 실제 운전 경로도 보여 드려요.</p>
+        <div class="region-buttons">
+          <button data-region="kr">한국</button>
+          <button data-region="jp">일본</button>
+          <button data-region="all">한국 + 일본</button>
+        </div>
+        <p class="fine">5라운드 · 라운드당 최대 5,000점</p>
+      </div>
+    </section>
+
+    <section id="token" class="overlay" hidden>
+      <form class="card" id="token-form">
+        <h1>Mapbox 토큰이 필요해요</h1>
+        <p>공개 토큰(<code>pk.</code>로 시작)을 입력하면 이 브라우저에만 저장돼요.<br />
+          빌드할 때 <code>VITE_MAPBOX_TOKEN</code>으로 넣거나 주소에 <code>?token=</code>을 붙여도 돼요.</p>
+        <input id="token-input" placeholder="pk.eyJ..." autocomplete="off" spellcheck="false" />
+        <button type="submit">시작</button>
+        <p class="fine" id="token-error" hidden></p>
+      </form>
+    </section>
+
+    <section id="end" class="overlay" hidden>
+      <div class="card">
+        <h1 id="end-rank"></h1>
+        <p class="big" id="end-total"></p>
+        <ol id="end-list"></ol>
+        <button id="again-btn">다시 하기</button>
+      </div>
+    </section>
+
+    <footer id="credit">Built with Mapbox GL JS · Terrain · Directions API</footer>
+  </body>
+</html>
